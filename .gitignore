@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual Environment
+backend/venv/
+venv/
+env/
+.venv/
+
+# Django
+*.log
+db.sqlite3
+
+# ChromaDB
+backend/chroma_db/
+backend/chromadb/
+backend/chroma/
+
+# Uploaded Documents
+backend/media/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# Test / sample uploaded medical documents
+backend/documents/*.pdf
+backend/documents/*.odt
+backend/documents/*.txt
