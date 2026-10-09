@@ -224,3 +224,21 @@ HealthDoc-AI is an AI-powered document assistant designed to help users understa
 It is not a replacement for a qualified medical professional and should not be used for medical diagnosis or treatment decisions.
 
 ![HealthDoc-AI System Architecture](docs/architecture.png)
+
+## Application Screenshots
+
+### Login Page
+
+![HealthDoc-AI Login](docs/screenshots/login.png)
+
+### Register Page
+
+![HealthDoc-AI Register](docs/screenshots/register.png)
+
+### Dashboard
+
+![HealthDoc-AI Dashboard](docs/screenshots/dashboard.png)
+
+### AI Chat
+
+![HealthDoc-AI Chat](docs/screenshots/chat.png)
