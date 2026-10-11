@@ -14,6 +14,7 @@ chromadb==1.5.9
 click==8.5.0
 cloudpickle==3.1.2
 distro==1.9.0
+dj-database-url==3.1.2
 Django==5.2.17
 django-cors-headers==4.9.0
 djangorestframework==3.18.0
@@ -25,6 +26,7 @@ frozenlist==1.8.0
 fsspec==2026.7.0
 googleapis-common-protos==1.75.3
 grpcio==1.84.0
+gunicorn==26.2.0
 h11==0.16.0
 hf-xet==1.6.0
 httpcore==1.0.9
@@ -118,6 +120,7 @@ uvloop==0.22.1
 watchfiles==1.2.0
 websocket-client==1.9.2
 websockets==17.1
+whitenoise==6.12.0
 xxhash==4.0.1
 yarl==1.24.5
 zstandard==0.25.0

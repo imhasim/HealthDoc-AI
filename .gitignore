@@ -45,3 +45,4 @@ frontend/.vite/
 backend/documents/*.pdf
 backend/documents/*.odt
 backend/documents/*.txt
+/backend/staticfiles/
