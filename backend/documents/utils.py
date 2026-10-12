@@ -1,8 +1,4 @@
 from pypdf import PdfReader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
-import chromadb
-import ollama
 
 
 def extract_text_from_pdf(file):
@@ -14,38 +10,61 @@ def extract_text_from_pdf(file):
         text += page.extract_text() or ""
 
     return text
-    
-    
+
+
 def split_text_into_chunks(text):
-    
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 500,
-        chunk_overlap = 50
+        chunk_size=500,
+        chunk_overlap=50
     )
-    
-    chunk = splitter.split_text(text)
-    
-    return chunk
+
+    return splitter.split_text(text)
 
 
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+_embedding_model = None
+
 
 def create_embedding(text):
-    embedding = embedding_model.encode(text)
-    return embedding
+    global _embedding_model
+
+    if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+
+        _embedding_model = SentenceTransformer(
+            "all-MiniLM-L6-v2"
+        )
+
+    return _embedding_model.encode(text)
 
 
+_chroma_client = None
+_collection = None
 
 
-chroma_client = chromadb.PersistentClient(
-    path = './chroma_db'
-)
+def get_collection():
+    global _chroma_client, _collection
 
-collection = chroma_client.get_or_create_collection(
-    name = 'health_documents'
-)
+    if _collection is None:
+        import chromadb
 
-def store_chunk_in_chromadb(chunk_id, text, embedding, document_id, owner_id):
+        _chroma_client = chromadb.PersistentClient(
+            path="./chroma_db"
+        )
+
+        _collection = _chroma_client.get_or_create_collection(
+            name="health_documents"
+        )
+
+    return _collection
+
+
+def store_chunk_in_chromadb(
+    chunk_id, text, embedding, document_id, owner_id
+):
+    collection = get_collection()
+
     collection.add(
         ids=[chunk_id],
         documents=[text],
@@ -55,38 +74,44 @@ def store_chunk_in_chromadb(chunk_id, text, embedding, document_id, owner_id):
             "owner_id": owner_id
         }]
     )
-    
-    
 
-def search_similar_chunks(question, owner_id, document_id, top_k=3):
-    
+
+def search_similar_chunks(
+    question, owner_id, document_id, top_k=3
+):
+    collection = get_collection()
+
     question_embedding = create_embedding(question)
-    
+
     results = collection.query(
-    query_embeddings=[question_embedding.tolist()],
-    n_results=top_k,
-    where={
-        "$and": [
-            {"owner_id": owner_id},
-            {"document_id": document_id}
-        ]
-    }
-)
+        query_embeddings=[question_embedding.tolist()],
+        n_results=top_k,
+        where={
+            "$and": [
+                {"owner_id": owner_id},
+                {"document_id": document_id}
+            ]
+        }
+    )
+
     return results
 
-def create_context(question,owner_id, top_k = 3):
-    
-    results = search_similar_chunks(question,owner_id, top_k)
-    
-    documents = results["documents"][0]
-    
-    context  = "\n\n".join(documents)
-    
-    return context    
-    
-    
-    
+
+def create_context(question, owner_id, document_id, top_k=3):
+    results = search_similar_chunks(
+        question,
+        owner_id,
+        document_id,
+        top_k
+    )
+
+    documents = results["documents"][0] if results["documents"] else []
+
+    return "\n\n".join(documents)
+
+
 def ask_llm(question, context):
+    import ollama
 
     prompt = f"""
 You are a healthcare document assistant.
@@ -123,38 +148,47 @@ Answer:
 
     return response["message"]["content"]
 
+
 def ask_question(question, owner_id, document_id):
-    # context = create_context(question,owner_id)
     results = search_similar_chunks(
-    question,
-    owner_id,
-    document_id
-)
-    
-    documents = results["documents"][0]
-    metadatas = results["metadatas"][0]
-    
+        question,
+        owner_id,
+        document_id
+    )
+
+    documents = results["documents"][0] if results["documents"] else []
+    metadatas = results["metadatas"][0] if results["metadatas"] else []
+
     sources = []
-    
+
     for document, metadata in zip(documents, metadatas):
         sources.append({
-            "document_id":metadata["document_id"],
-            "content":document
+            "document_id": metadata["document_id"],
+            "content": document
         })
-    
+
     context = "\n\n".join(documents)
-    
-    answer = ask_llm(question,context)
-    
+
+    if not context.strip():
+        return {
+            "answer": "I could not find this information in the uploaded document.",
+            "sources": []
+        }
+
+    answer = ask_llm(question, context)
+
     return {
-        "answer":answer,
-        "sources":sources
+        "answer": answer,
+        "sources": sources
     }
 
 
 def delete_document_from_chromadb(document_id):
+    collection = get_collection()
+
     collection.delete(
         where={
             "document_id": document_id
         }
     )
+
