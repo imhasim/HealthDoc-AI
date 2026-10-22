@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/login";
-import Dashboard from "./pages/Dashboard";
-import Register from "./pages/Register";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Chat from "./pages/Chat";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Register from "./pages/Register.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import Chat from "./pages/Chat.jsx";
 
 function App() {
 return ( <BrowserRouter> <Routes>
